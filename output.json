@@ -1,0 +1,7 @@
+{
+"solution":[
+    {"distance_sum":21.5, "fname":"Facility1, "cname":"Client1", "cname":"Client4", "cname":"Client6"},
+    {"distance_sum":18.0, "fname":"Facility2, "cname":"Client2", "cname":"Client3", "cname":"Client7"},
+    {"distance_sum":25.5, "fname":"Facility3, "cname":"Client5", "cname":"Client8", "cname":"Client9"}
+]
+}
