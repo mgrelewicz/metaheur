@@ -7,17 +7,23 @@
 
 class facility_t {
 public:
-  double x, y;
-  std::string name;
-  facility_t operator-(const facility_t c) {
-      return {x-c.x,y-c.y,name};
+  double fx, fy;
+  std::string fname;
+  facility_t operator-(const facility_t f) {
+      return {fx-f.fx,fy-f.fy,fname};
   };
-  double len() {
-      return std::sqrt(x*x+y*y);
-  }
 };
-using problem_t = std::vector<city_t>;
 
+class client_t {
+public:
+  double cx, cy;
+  std::string cname;
+  client_t operator-(const client_t c) {
+      return {cx-c.cx,cy-c.cy,cname};
+  };
+};
+
+using problem_t = std::vector<client_t>;
 
 class solution_t {
 public:
