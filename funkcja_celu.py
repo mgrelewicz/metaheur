@@ -9,7 +9,7 @@ Created on Sun Jun 14 15:13:37 2020
 
 #### Funkcja celu: chcemy uzyskać różnicę (diff) żeby móc ją minimalizować
     
-def target(subset):
+def goal(subset):
     
     size = len(subset)
     print('size: ', size)
@@ -48,6 +48,5 @@ def target(subset):
     else:
         print('Potrzebna optymalizacja!')
     
-    #return Output()
     return diff
 
