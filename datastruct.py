@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Jun 14 15:13:37 2020
-
-@author: Marcin
-"""
 #
 
 #### Input:
