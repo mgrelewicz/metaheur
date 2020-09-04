@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jun 21 08:43:21 2020
-
-@author: Marcin
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Sun Jun 14 15:13:37 2020
 
 @author: Marcin
