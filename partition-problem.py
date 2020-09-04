@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jun 14 15:13:37 2020
-
+Created on Sun Apr 05 15:13:37 2020
 @author: Marcin
 """
 #
@@ -16,12 +15,11 @@ Created on Sun Jun 14 15:13:37 2020
 #  się podzielić na 2 równe częsci
 ## 2) Dwa podzbiory (po podziale)
 #
-
-#import random
+import random
 from random import seed
 from random import sample
 import copy
-#import math
+import math
 import time
 
 #################### Struktury danych:
@@ -29,17 +27,17 @@ import time
 subset = []
 subset_A = []
 subset_B = []
-
 sum_A = 0
 sum_B = 0
-
 sum_subset = 0
 
 greedy_diff = 0
 kar_diff = 0
 brute_diff = 0
 brute_check = 0
-
+tabu_diff = 0
+hill_diff = 0
+sa_diff = 0
 
 ##### Losowanie zbioru:
 print('')
@@ -47,60 +45,71 @@ print('Trwa przygotowanie danych.........')
 seed(1)
 sequence = [i for i in range(90)]
 #print ('sequence: ', sequence)
-subset = sample(sequence, 20)
+subset = sample(sequence, 33)
 #print ('subset: ', subset)
 size = len(subset)
 
-#class Output: 
-#    def __init__(self): 
-#        self.subset_A = []
-#        self.subset_B = []
-#        self.subset = []
-#        self.diff = 0   
+if (size%2 == 0):
+    A_size = size//2
+    B_size = A_size
+else:
+    A_size = size//2
+    size += 1
+    B_size = size//2
+    size -= 1
+#print('sizeA: ', A_size)
+#print('sizeB: ', B_size)   
+
+for i in range(0, A_size, 1):
+    subset_A.append(subset[i])
+for j in range(A_size, size, 1):
+    subset_B.append(subset[j])
+#print('subsetA: ', subset_A)   
+#print('subsetB: ', subset_B)
+   
+sum_A = sum(subset_A)
+sum_B = sum(subset_B)
+#print('SumA: ', sum_A)
+#print('SumB: ', sum_B)
+diff = abs(sum_A - sum_B)
+
+empty = []
+initial_solution = [subset, empty]
 
 
-#### Funkcja celu: chcemy uzyskać różnicę (diff) żeby móc ją minimalizować
+######################### Funkcja Celu:
+
+def objective_function(initial_solution):
+
+    sum_A = sum(initial_solution[0])
+    sum_B = sum(initial_solution[1])
+    diff = abs(sum_A - sum_B)
     
-def target(subset):
-    
-    size = len(subset)
-    print('size: ', size)
-    
-    if (size%2 == 0):
-        A_size = size//2
-        B_size = size//2
-    else:
-        A_size = size//2
-        size += 1
-        B_size = size//2
-        size -= 1
-    print('sizeA: ', A_size)
-    print('sizeB: ', B_size)   
-    
-    for i in range(0, A_size, 1):
-        subset_A.append(subset[i])
-    for j in range(A_size, size, 1):
-        subset_B.append(subset[j])
-    print('subsetA: ', subset_A[:5])   
-    print('subsetB: ', subset_B[:5])   
-    
-    sum_A = sum(subset_A)
-    sum_B = sum(subset_B)
-    print('SumA: ', sum_A)
-    print('SumB: ', sum_B)
-    
-    if (sum_A >= sum_B):
-        diff = (sum_A - sum_B)
-    else:
-        diff = (sum_B - sum_A)
-    
-    print('Diff: ', diff)
     if diff == 0:
         print('bingo!')
     else:
-        print('Potrzebna optymalizacja!')
+        if sum_A > sum_B:
+            #n = len(initial_solution[0])
+            #i = random.randrange(0, m-1)
+            sel1 = initial_solution[0].pop(0)
+            #sel2 = initial_solution[1].pop(i)
+            #initial_solution[0].append(sel2)
+            initial_solution[1].append(sel1)
+        else:
+        #     m = len(initial_solution[1])
+        #     #i = random.randrange(0, m-1)
+        #     #sel1 = initial_solution[0].pop(i)
+            sel2 = initial_solution[1].pop(0)
+            initial_solution[0].append(sel2)
+        #     #initial_solution[1].append(sel1)
+        
+        current_solution = initial_solution
+        
+        sum_A = sum(current_solution[0])
+        sum_B = sum(current_solution[1])
+        diff = abs(sum_A - sum_B)
+        #print('Diff: ', diff)
     
-    #return Output()
     return diff
 
 
@@ -122,7 +131,7 @@ def karp(subset):
         ksubset[index2] = 0
         kar_diff = ksubset[index1]
     
-    print('Karmarkar-Karp return kk-diff: ', kar_diff)
+    #print('Karmarkar-Karp return kk-diff: ', kar_diff)
     return kar_diff
 
 
@@ -164,8 +173,8 @@ def greedy(subset):
             greedy_diff = (sum_B - sum_A)
         
 
-    print('Greedy_diff : ', greedy_diff)
-    return (greedy_diff)   
+    #print('Greedy_diff : ', greedy_diff)
+    return greedy_diff
         
 
 ########################### rekursywny Brute-Force :
@@ -203,51 +212,208 @@ def brute_recursive(subset, sum, currentIndex):
 
 
 
-############################### Dynamic Programming :
+######################### Hill Climbing Objective Function:
 
-def dynPro(subset, size): 
+def hc_objective_function(initial_solution):
+
+    sum_A = sum(initial_solution[0])
+    sum_B = sum(initial_solution[1])
+    diff = abs(sum_A - sum_B)
     
-    s_sum = 0
-    i, j = 0, 0
-       
-    for i in range(size): 
-        s_sum += subset[i] 
-      
-    if s_sum % 2 != 0: 
-        return False 
-      
-    part = [[ True for i in range(size + 1)]  
-                   for j in range(s_sum // 2 + 1)] 
-      
-    # inicjuje górny wiersz 
-    for i in range(0, size + 1): 
-        part[0][i] = True
-          
-    # inicjalizuje skrajną lewą kolumnę,  
-    # oprócz part[0][0], jako 0 
-    for i in range(1, s_sum // 2 + 1): 
-        part[i][0] = False
-      
-    # wypełnia tablicę od dołu do góry  
-    for i in range(1, s_sum // 2 + 1): 
-          
-        for j in range(1, size + 1): 
-            part[i][j] = part[i][j - 1] 
-              
-            if i >= subset[j - 1]: 
-                part[i][j] = (part[i][j] or 
-                              part[i - subset[j - 1]][j - 1]) 
-          
-    return part[s_sum // 2][size] 
-      
+    if diff == 0:
+        print('bingo!')
+    else:
+        if sum_A > sum_B:
+            n = len(initial_solution[0])
+            #i = random.randrange(0, m-1)
+            sel1 = initial_solution[0].pop(n-1)
+            #sel2 = initial_solution[1].pop(i)
+            #initial_solution[0].append(sel2)
+            initial_solution[1].append(sel1)
+        
+        current_solution = initial_solution
+        
+        sum_A = sum(current_solution[0])
+        sum_B = sum(current_solution[1])
+        diff = abs(sum_A - sum_B)
+        #print('Diff: ', diff)
+    
+    return diff
 
+############################ Hill Climbing:
+
+def hill_climbing(initial_solution):
+
+    hc_init_sol = copy.deepcopy(initial_solution)
+    current_solution = hc_init_sol
+    best_minimum = hc_objective_function(current_solution)
+    store_best_minimum = []
+    current_minimum = hc_objective_function(current_solution)
+    
+    for i in range(66):       
+        current_minimum = hc_objective_function(current_solution)
+        if current_minimum > best_minimum:
+            accept = False #odrzucamy gorsze rozwiązanie
+        else:
+            accept = True
+        if accept==True:
+            best_solution = current_solution # best solution update 
+            best_minimum = hc_objective_function(best_solution)
+            #if best_minimum == 0:
+        else:
+            break
+ 
+        
+        print('iteration: {}, best_minimum: {}'.format(i, best_minimum))
+        store_best_minimum.append(best_minimum)
+    
+    hill_diff = min(store_best_minimum)
+    print('Best diff: ', hill_diff)
+    
+    return hill_diff
+ 
+    
+######################### Simulated annealing Objective Function:
+
+def sa_objective_function(initial_solution):
+
+    sum_1 = sum(initial_solution[0])
+    sum_2 = sum(initial_solution[1])
+    s_diff = abs(sum_1 - sum_2)
+    
+    if s_diff == 0:
+        print('bingo!')
+    else:
+        if sum_1 > sum_2:
+            n = len(initial_solution[0])
+            i = random.randrange(1, 3)
+            sel1 = initial_solution[0].pop(n-i)
+            #sel2 = initial_solution[1].pop(i)
+            #initial_solution[0].append(sel2)
+            initial_solution[1].append(sel1)
+        else:
+            m = len(initial_solution[1])
+            i = random.randrange(0, 2)
+            #sel1 = initial_solution[0].pop(i)
+            sel2 = initial_solution[1].pop(i)
+            initial_solution[0].append(sel2)
+            #initial_solution[1].append(sel1)
+        
+        current_solution = initial_solution
+        
+        sum_1 = sum(current_solution[0])
+        sum_2 = sum(current_solution[1])
+        s_diff = abs(sum_1 - sum_2)
+        #print('Diff: ', diff)
+    
+    return s_diff
+
+
+############################ Simulated annealing:
+
+def simulated_annealing(initial_solution):
+
+    T_initial = 650
+    T_minimum = 50
+    cooling_rate = 0.97
+    T_current = T_initial
+    
+    sa_init_sol = copy.deepcopy(initial_solution)
+    current_solution = sa_init_sol
+    best_cost = sa_objective_function(current_solution)
+    current_cost = sa_objective_function(current_solution)
+    store_best_cost = []
+    
+    dEn = 1
+    n = 1 
+    
+    while T_current > T_minimum:
+        for i in range(90):     # ile razy zminiejszamy temperaturę
+            for j in range(1):  # dla każdego obniżenia T ile razy szukamy "sąsiada"    
+                current_cost = sa_objective_function(current_solution)
+                En = abs(current_cost - best_cost)
+
+                if current_cost > best_cost:
+                    En = math.exp(-En/(dEn*T_current))
+                    accept = False
+                else:
+                    accept = True
+                if accept==True:
+                    best_solution = current_solution 
+                    best_cost = sa_objective_function(best_solution)
+                    n = n + 1       #ile zaakceptowanych
+                    dEn = (dEn *(n-1) + En)/n 
+                else:
+                    break
+                
+            T_current = T_current*cooling_rate
+            store_best_cost.append(best_cost)
+            print('iteration: {}, best_cost: {}, T_current: {}'.format(i, best_cost, T_current))
+
+    sa_diff = min(store_best_cost)
+    print('Best diff: ', sa_diff)
+    
+    return sa_diff
+ 
+    
+############################ Tabu:
+
+def tabu(subset_A, subset_B):
+
+    sum_A = sum(subset_A)
+    sum_B = sum(subset_B)
+    initial_diff = abs(sum_A - sum_B)
+    
+    t_initial_solution = [subset_A, subset_B]
+    current_solution = t_initial_solution
+    candidates = []
+    current_diff = initial_diff
+    best_cost = 0
+    store_best_cost = []
+    
+    # utworzenie kandydatów:
+    for i in range(99):       
+        if sum_A > sum_B:
+            n = len(t_initial_solution[0])
+            j = random.randrange(0, n-1)
+            sel1 = t_initial_solution[0].pop(j)
+            current_solution[1].append(sel1)
+            sum_A = sum(current_solution[0])
+            sum_B = sum(current_solution[1])
+            current_diff = abs(sum_A - sum_B)
+        else:
+            m = len(t_initial_solution[1])
+            k = random.randrange(0, m-1)
+            sel2 = t_initial_solution[1].pop(k)
+            current_solution[0].append(sel2)
+            sum_A = sum(current_solution[0])
+            sum_B = sum(current_solution[1])
+            current_diff = abs(sum_A - sum_B)
+        
+        if current_diff < initial_diff:
+            candidates.append([current_solution[0], current_solution[0]]) 
+            best_cost = current_diff
+            store_best_cost.append(best_cost)
+        print('iteration: {}, best_cost: {}'.format(i, best_cost))
+
+    # wyodrębnienie najlepszego kandydata
+    lc = len(store_best_cost)      
+    for i in range(lc-1):             
+        if store_best_cost[i] == 0:
+            print('bingo!')
+        else:
+            best_cost_so_far = min(store_best_cost)
+            store_best_cost.append(best_cost_so_far)
+    
+    tabu_diff = min(store_best_cost)
+    print('Best diff: ', tabu_diff)
+    
+    return tabu_diff    
 
 ############################ Funkcja oceny:
 
-
 def main():
     
-    target(subset)
     #print(subset)
     seq2 = [i for i in range(10000)]
     sub_ext1 = sample(seq2, 55)
@@ -255,13 +421,13 @@ def main():
     sub_ext3 = sample(seq2, 255)
     sub_ext4 = sample(seq2, 355)
     sub_ext5 = sample(seq2, 455)
-    sub_ext6 = sample(seq2, 555)
-    sub_ext7 = sample(seq2, 655)
-    sub_ext8 = sample(seq2, 755)
-    sub_ext9 = sample(seq2, 855)
-    sub_ext10 = sample(seq2, 955)
-    sub_ext11 = sample(seq2, 1055)
-    sub_ext12 = sample(seq2, 1155)
+#    sub_ext6 = sample(seq2, 555)
+#    sub_ext7 = sample(seq2, 655)
+#    sub_ext8 = sample(seq2, 755)
+#    sub_ext9 = sample(seq2, 855)
+#    sub_ext10 = sample(seq2, 955)
+#    sub_ext11 = sample(seq2, 1055)
+#    sub_ext12 = sample(seq2, 1155)
 #    sub_ext13 = sample(seq2, 1255)
 #    sub_ext14 = sample(seq2, 1355)
 #    sub_ext15 = sample(seq2, 1455)
@@ -279,11 +445,13 @@ def main():
     ## wszystkie próbki:
     #sub_list = [sub_ext1, sub_ext2, sub_ext3, sub_ext4, sub_ext5, sub_ext6, sub_ext7, sub_ext8, sub_ext9, sub_ext10, sub_ext11, sub_ext12, sub_ext13, sub_ext14, sub_ext15, sub_ext16, sub_ext17, sub_ext18, sub_ext19, sub_ext20, sub_ext21, sub_ext22, sub_ext23, sub_ext24, sub_ext25]
     ## połowa:
-    sub_list = [sub_ext1, sub_ext2, sub_ext3, sub_ext4, sub_ext5, sub_ext6, sub_ext7, sub_ext8, sub_ext9, sub_ext10, sub_ext11, sub_ext12]
+    #sub_list = [sub_ext1, sub_ext2, sub_ext3, sub_ext4, sub_ext5, sub_ext6, sub_ext7, sub_ext8, sub_ext9, sub_ext10, sub_ext11, sub_ext12]
     ## krótki test:
     #sub_list = [sub_ext1, sub_ext2, sub_ext3, sub_ext4, sub_ext5]
     ## tylko 2 przebiegi:
     #sub_list = [sub_ext1, sub_ext2]
+    ## tylko 1 przebieg:
+    sub_list = [sub_ext1]
     
     bf_time_sum = 0
     bf_time_avg = 0
@@ -291,87 +459,122 @@ def main():
     g_time_avg = 0
     kk_time_sum = 0
     kk_time_avg = 0
-    dp_time_sum = 0
-    dp_time_avg = 0
-    avg_max = 0
+    tabu_time_sum = 0
+    tabu_time_avg = 0
+    hill_time_sum = 0
+    hill_time_avg = 0
+    sa_time_sum = 0
+    sa_time_avg = 0
+    avg_min = 0
     avg_all = []
-    g_reply =[]
-    dp_reply =[]
-    kk_reply =[]
-#    bf_reply =[]
+    g_reply = []
+    bf_reply = []
+    kk_reply = []
+    tabu_reply = []
+    hill_reply = []
+    sa_reply = []
+
 
     print("")
     print(">>> start kalkulacji <<<")
     print("")
     
-
     subset1 = subset
     for sub_ext in sub_list:
         start1 = time.time()
-        greedy(subset1)
+        greedy_diff = greedy(subset1)
         g_reply.append(greedy_diff)
         end1 = time.time()
         g_time=((end1 - start1))  #/10?
-        print ("Greedy: Czas %f s" % (g_time))
+        #print ("Greedy: Czas %f s" % (g_time))
         subset1.extend(sub_ext)
         #g_time=((end1 - start1)/10)
         g_time_sum += g_time
-    print("")
     g_time_avg = g_time_sum/len(sub_list)
-    avg_all.append(g_time_avg)
-    print('Greedy czas sredni: ', g_time_avg)
-    print('')
+    avg_all.append(round(g_time_avg, 5))
+    # print('Greedy czas sredni: ', g_time_avg)
+    # print('')
     
-## ! bf wiesza się przy większych    
-#    subset2 = subset
-#    for sub_ext in sub_list:
-#        start2 = time.time()
-#        brute(subset2)
-##        bf_reply.append(str(brute(subset2)))
-#        end2 = time.time()
-#        bf_time=((end2 - start2)/10)
-#        ##print(subset2, brute_check)
-#        print ("BruteForce: Czas %f s" % (bf_time))
-#        subset2.extend(sub_ext)
-#        bf_time_sum += bf_time
-#    print("")
-#    bf_time_avg = bf_time_sum/len(sub_list)
-#    avg_all.append(bf_time_avg)
-#    print('Brute czas sredni: ', bf_time_avg)
-#    print('')
-
-
+## ! bf wiesza się przy większych danych
+    subset2 = subset
+    for sub_ext in sub_list:
+        start2 = time.time()
+        brute(subset2)
+        bf_reply.append(str(brute(subset2)))
+        end2 = time.time()
+        bf_time=((end2 - start2)/10)
+        ##print(subset2, brute_check)
+        #print ("BruteForce: Czas %f s" % (bf_time))
+        subset2.extend(sub_ext)
+        bf_time_sum += bf_time
+    bf_time_avg = bf_time_sum/len(sub_list)
+    avg_all.append(round(bf_time_avg, 5))
+    # print('BruteForce czas sredni: ', bf_time_avg)
+    # print('')
+    
     subset3 = subset
     for sub_ext in sub_list:
         start3 = time.time()
-        karp(subset3)
+        kar_diff = karp(subset3)
         kk_reply.append(kar_diff)
         end3 = time.time()
         kk_time=((end3 - start3))
-        print ("KK: Czas %f s" % (kk_time))
+        #print ("KK: Czas %f s" % (kk_time))
         subset3.extend(sub_ext)
         kk_time_sum += kk_time
-        print("")
     kk_time_avg = kk_time_sum/len(sub_list)
-    avg_all.append(kk_time_avg)
-    print('Karmarkar czas sredni: ', kk_time_avg)        
+    avg_all.append(round(kk_time_avg, 5))
+    # print('Karmarkar czas sredni: ', kk_time_avg)        
+    # print('')
+    
+    subset5a = subset_A
+    subset5b = subset_B
+    print('Tabu:')
+    for sub_ext in sub_list:
+        start5 = time.time()
+        tabu_diff = tabu(subset5a, subset5b)
+        tabu_reply.append(tabu_diff)
+        end5 = time.time()
+        tabu_time=((end5 - start5))
+        #print ("Tabu search: Czas %f s" % (tabu_time))
+        # subset5a.extend(sub_ext)
+        # subset5b.extend(sub_ext)
+        tabu_time_sum += tabu_time
+    tabu_time_avg = tabu_time_sum/len(sub_list)
+    avg_all.append(round(tabu_time_avg, 5))
+    print('Tabu Search czas sredni: ', tabu_time_avg)      
     print('')
     
-    
-    subset4 = subset
+    subset6 = initial_solution
+    print('Hill Climbing:')
     for sub_ext in sub_list:
-        start4 = time.time()
-        dynPro(subset4, size)
-        dp_reply.append(str(dynPro(subset4, size)))
-        end4 = time.time()
-        dp_time=((end4 - start4))
-        print ("DP: Czas %f s" % (dp_time))
-        subset4.extend(sub_ext)
-        dp_time_sum += dp_time
-        #print("")
-    dp_time_avg = dp_time_sum/len(sub_list)
-    avg_all.append(dp_time_avg)
-    print('Dynamic Programming czas sredni: ', dp_time_avg)        
+        start6 = time.time()
+        hill_diff = hill_climbing(subset6)
+        hill_reply.append(hill_diff)
+        end6 = time.time()
+        hill_time=((end6 - start6))
+        #print ("Hill Climbing: Czas %f s" % (hill_time))
+        #subset6.extend(sub_ext)
+        hill_time_sum += hill_time
+    hill_time_avg = hill_time_sum/len(sub_list)
+    avg_all.append(round(hill_time_avg, 5))
+    print('Hill Climbing czas sredni: ', hill_time_avg)        
+    print('')
+    
+    subset7 = initial_solution
+    print('Simulated Annealing:')
+    for sub_ext in sub_list:
+        start7 = time.time()
+        sa_diff = simulated_annealing(subset7)
+        sa_reply.append(sa_diff)
+        end7 = time.time()
+        sa_time=((end7 - start7))
+        #print ("SA: Czas %f s" % (sa_time))
+        #subset7.extend(sub_ext)
+        sa_time_sum += sa_time
+    sa_time_avg = sa_time_sum/len(sub_list)
+    avg_all.append(round(sa_time_avg, 5))
+    print('Simulated Annealing czas sredni: ', sa_time_avg)        
     print('')
     
     print(">>> koniec kalkulacji <<<")
@@ -383,63 +586,64 @@ def main():
     print('Odpowiedzi algorytmów:')
     print('')
 
-    if dynPro(subset, size) == True: 
-        print("DP: Da się podzielić na dwa podzbiory o rownej sumie") 
-    if dynPro(subset, size) == False:  
-        print("DP: Nie da się podzielić na dwa podzbiory o rownej sumie") 
-
-
+    print("Karmarkar-Karp: ", kk_reply)
     if kar_diff == 0:
         print("KK: Da się podzielić na dwa podzbiory o rownej sumie") 
     if kar_diff != 0: 
         print("KK: Nie da się podzielić na dwa podzbiory o rownej sumie") 
-
-
+    print('')
+    print("Greedy: ", g_reply)
     if greedy_diff == 0:
         print("Greedy: Da się podzielić na dwa podzbiory o rownej sumie")
     if greedy_diff != 0:
         print("Greedy: Nie da się podzielić na dwa podzbiory o rownej sumie")
-
-
+    print('')
+    print("BruteForce: ", bf_reply)
     brute_reply = str(brute(subset))
     if brute_reply == True:
         print("BF: Da się podzielić na dwa podzbiory o rownej sumie")
     if brute_reply == False:
         print("BF: Nie da się podzielić na dwa podzbiory o rownej sumie")
-
+    print('')
+    print("Tabu Search: ", tabu_reply)
+    if tabu_diff == 0:
+        print("Tabu Search: Da się podzielić na dwa podzbiory o rownej sumie") 
+    if tabu_diff != 0: 
+        print("Tabu Search: Nie da się podzielić na dwa podzbiory o rownej sumie")    
+    print('')
+    print("Hill Climbing: ", hill_reply)
+    if hill_diff == 0:
+        print("Hill Climbing: Da się podzielić na dwa podzbiory o rownej sumie") 
+    if hill_diff != 0: 
+        print("Hill Climbing: Nie da się podzielić na dwa podzbiory o rownej sumie")
+    print('')
+    print("Simulated Annealing: ", sa_reply)
+    if sa_diff == 0:
+        print("SA: Da się podzielić na dwa podzbiory o rownej sumie") 
+    if sa_diff != 0: 
+        print("SA: Nie da się podzielić na dwa podzbiory o rownej sumie")
 
         
 ### finalna ocena:
     print('')
-    print('Avg all: ', avg_all)
+    print('Średnie czasy (greedy, brute, kk, tabu, hill, sa): ', avg_all)
     print('')    
     
-    avg_max = max(avg_all)    
+    avg_min = min(avg_all)    
     
-    if (dp_time_avg == avg_max):
-        print('Najszybszym algorytmem jest: Dynamic Programming')
-    if (kk_time_avg == avg_max):
+    if (kk_time_avg == avg_min):
         print('Najszybszym algorytmem jest: Karmarkar-Karp')
-    if (bf_time_avg == avg_max):
+    if (bf_time_avg == avg_min):
         print('Najszybszym algorytmem jest: Brute Force')
-    if (g_time_avg == avg_max):
+    if (g_time_avg == avg_min):
         print('Najszybszym algorytmem jest: Greedy')
+    if (tabu_time_avg == avg_min):
+        print('Najszybszym algorytmem jest: Tabu Search')
+    if (hill_time_avg == avg_min):
+        print('Najszybszym algorytmem jest: Hill Climbing')
+    if (sa_time_avg == avg_min):
+        print('Najszybszym algorytmem jest: Simulated Annealing')
     
-### Teoretyczne porównanie do poprawnego rozwiązania - jesli bysmy je mieli:   
-    print('') 
-#    print('Sprawdzenie trafnosci: ')
-#    print('')
-#    print("Rozwiązanie: ", solution)
-#    print('') 
-    print("Greedy: ", g_reply)
-    print('') 
-    print("Dynamic Programming: ", dp_reply)
-    print('') 
-    print("Karmarkar-Karp: ", kk_reply)
-#    print("BruteForce: ", bf_reply)
-#    print('') 
-    
-        
         
 main()
     
